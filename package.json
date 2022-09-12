@@ -1,0 +1,19 @@
+{
+  "name": "tghive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "author": "Alberto Elorza",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^4.9.1",
+    "node-telegram-bot-api": "^0.59.0"
+  },
+  "devDependencies": {
+    "@types/node-telegram-bot-api": "^0.57.1"
+  }
+}
