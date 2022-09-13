@@ -1,15 +1,15 @@
-import { Collection, Document, MatchKeysAndValues } from "mongodb";
+import { Collection, Document, Filter, MatchKeysAndValues } from "mongodb";
 
 export abstract class Model<T extends Document> {
     constructor(protected collection: Collection<T>) {
 
     }
 
-    async find(query?: Partial<T>): Promise<T | null> {
+    async find(query?: Filter<T>): Promise<T | null> {
         return await this.collection.findOne(query || {}) as T | null;
     }
 
-    async findAll(query?: Partial<T>): Promise<T[]> {
+    async findAll(query?: Filter<T>): Promise<T[]> {
         return await this.collection.find(query || {}).toArray() as T[];
     }
 
@@ -21,11 +21,11 @@ export abstract class Model<T extends Document> {
         await this.collection.insertMany(data as any[]);
     }
 
-    async update(query: Partial<T>, changes: MatchKeysAndValues<T>) {
+    async update(query: Filter<T>, changes: MatchKeysAndValues<T>) {
         await this.collection.updateOne(query, {"$set": changes})
     }
     
-    async updateAll(query: Partial<T>, changes: MatchKeysAndValues<T>) {
+    async updateAll(query: Filter<T>, changes: MatchKeysAndValues<T>) {
         await this.collection.updateMany(query, {"$set": changes})
     }
 }
