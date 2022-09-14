@@ -2,7 +2,7 @@ import { Model } from "./common";
 
 export interface DbBot {
     name: string;
-    token: string
+    token: string;
 }
 
 export class Bots extends Model<DbBot> {

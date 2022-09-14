@@ -2,11 +2,11 @@ import { Message } from "node-telegram-bot-api";
 import { SavableModel } from "./common";
 
 export interface DbMessage {
-    messageId: number,
-    chatId: number,
-    userId?: number,
-    date: number,
-    content: any
+    messageId: number;
+    chatId: number;
+    userId?: number;
+    date: number;
+    content: any;
 }
 
 export class Messages extends SavableModel<DbMessage, Message> {

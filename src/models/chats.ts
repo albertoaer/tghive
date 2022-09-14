@@ -13,9 +13,9 @@ export interface DbUser {
 
 export type DbChat = {
     name?: string;
-    alias?: string,
-    chatId: number,
-    via: TelegramBot.ChatType
+    alias?: string;
+    chatId: number;
+    via: TelegramBot.ChatType;
 } & (DbGroup | DbUser) & Document;
 
 export class Chats extends SavableModel<DbChat, Chat> {
