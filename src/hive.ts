@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { randomBytes } from 'crypto';
 import { DbManager, HiveEvents } from './models';
 import { Document } from 'mongodb';
-import { Config, fillConfig, ValidConfig } from './utils';
+import { Config, fillConfig, onExit, ValidConfig } from './utils';
 
 export interface HiveConfig {
     listenEvents: boolean,
@@ -41,15 +41,11 @@ export class HiveListenner extends EventEmitter {
     }
 
     private async fetchEvents() {
-        const events = await this.hiveEvents.findAll({
-            timestamp: { $gt: this.lastTimeStamp }
-        });
+        const events = await this.hiveEvents.retrieve(this.sessionId, this.lastTimeStamp);
         for (const event of events) {
-            if (this.sessionId != event.sessionId) {
-                this.emit(event.topic, event.data);
-                if (this.lastTimeStamp < event.timestamp)
-                    this.lastTimeStamp = event.timestamp;
-            }
+            this.emit(event.topic, event.data);
+            if (this.lastTimeStamp < event.timestamp)
+                this.lastTimeStamp = event.timestamp;
         }
     }
 
@@ -59,6 +55,21 @@ export class HiveListenner extends EventEmitter {
             topic,
             data,
             timestamp: Date.now()
+        });
+    }
+
+    async each(timeMs: number, topic: string, generator: () => Document | undefined) {
+        const interval = setInterval(() => {
+            const generated = generator();
+            if (generated) this.sendEvent(topic, generated);
+        }, timeMs);
+        onExit(async () => clearInterval(interval));
+    }
+
+    async stream(inputTopic: string, operation: (doc: Document) => Document | undefined, outputTopic?: string) {
+        this.on(inputTopic, data => {
+           const output = operation(data);
+           if (output) this.sendEvent(outputTopic || inputTopic, output); 
         });
     }
 }

@@ -9,4 +9,10 @@ export interface HiveEvent {
 }
 
 export class HiveEvents extends Model<HiveEvent> {
+    async retrieve(requester: string, startTime: number): Promise<HiveEvent[]> {
+        return await this.findAll({
+            sessionId: { $ne: requester },
+            timestamp: { $gt: startTime }
+        });
+    }
 }
