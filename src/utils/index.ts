@@ -1,3 +1,5 @@
+export * from './config';
+
 export function onExit(callback: () => Promise<void>) {
     const done = [false];
     [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach(

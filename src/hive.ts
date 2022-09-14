@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { randomBytes } from 'crypto';
 import { DbManager, HiveEvents } from './models';
 import { Document } from 'mongodb';
-import { Config, fillConfig, ValidConfig } from './utils/config';
+import { Config, fillConfig, ValidConfig } from './utils';
 
 export interface HiveConfig {
     listenEvents: boolean,

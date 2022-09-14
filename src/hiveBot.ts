@@ -1,7 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
-import { Config, fillConfig, ValidConfig } from "./utils/config";
 import { openHive, HiveConfig, HiveResult, defaultHiveConfig } from "./hive";
-import { onExit } from "./utils";
+import { onExit, Config, fillConfig, ValidConfig } from "./utils";
 
 export interface HiveBotConfig extends HiveConfig {
     keepChat: boolean,
