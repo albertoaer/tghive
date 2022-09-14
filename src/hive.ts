@@ -15,11 +15,11 @@ export const defaultHiveConfig = {
     elapseMs: 100
 }
 
-export class Hive extends EventEmitter {
+export class HiveListenner extends EventEmitter {
     public readonly sessionId: string = randomBytes(12).toString('hex');
     private readonly hiveEvents: HiveEvents = this.config.db.events;
     private lastTimeStamp: number = Date.now();
-    private listenOn: boolean = false; 
+    private listenOn: boolean = false;
 
     constructor(protected readonly config: ValidConfig<HiveConfig>) {
         super({});
@@ -65,9 +65,9 @@ export class Hive extends EventEmitter {
 
 export interface HiveResult {
     db: DbManager;
-    hive: Hive;
+    hive: HiveListenner;
 }
 
 export async function openHive(config: Config<HiveConfig, typeof defaultHiveConfig>): Promise<HiveResult> {
-    return { db: config.db, hive: new Hive(fillConfig(config, defaultHiveConfig)) };
+    return { db: config.db, hive: new HiveListenner(fillConfig(config, defaultHiveConfig)) };
 }
