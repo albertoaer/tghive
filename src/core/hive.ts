@@ -1,29 +1,18 @@
 import { EventEmitter } from 'events';
 import { randomBytes } from 'crypto';
-import { DbManager, HiveEvents } from './models';
+import { DbManager, HiveEvents } from '../models';
 import { Document } from 'mongodb';
-import { Config, fillConfig, onExit, ValidConfig } from './utils';
-
-export interface HiveConfig {
-    listenEvents: boolean,
-    elapseMs: number
-    db: DbManager
-}
-
-export const defaultHiveConfig = {
-    listenEvents: true,
-    elapseMs: 100
-}
+import { onExit } from '../utils';
 
 export class HiveListenner extends EventEmitter {
     public readonly sessionId: string = randomBytes(12).toString('hex');
-    private readonly hiveEvents: HiveEvents = this.config.db.events;
+    private readonly hiveEvents: HiveEvents = this.db.events;
     private lastTimeStamp: number = Date.now();
     private listenOn: boolean = false;
 
-    constructor(protected readonly config: ValidConfig<HiveConfig>) {
+    constructor(private db: DbManager, listenEvents: boolean, elapseMs: number) {
         super({});
-        if (config.listenEvents) {
+        if (listenEvents) {
             this.listenOn = true;
             const timer = setInterval(async () => {
                 try {
@@ -32,7 +21,7 @@ export class HiveListenner extends EventEmitter {
                     clearInterval(timer);
                     this.listenOn = false;
                 }
-            }, config.elapseMs);
+            }, elapseMs);
         }
     }
 
@@ -72,13 +61,4 @@ export class HiveListenner extends EventEmitter {
            if (output) this.sendEvent(outputTopic || inputTopic, output); 
         });
     }
-}
-
-export interface HiveResult {
-    db: DbManager;
-    hive: HiveListenner;
-}
-
-export async function openHive(config: Config<HiveConfig, typeof defaultHiveConfig>): Promise<HiveResult> {
-    return { db: config.db, hive: new HiveListenner(fillConfig(config, defaultHiveConfig)) };
 }
