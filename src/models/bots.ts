@@ -1,9 +1,10 @@
+import { Document } from "mongodb";
 import { Model } from "./common";
 
-export interface DbBot {
+export type DbBot = {
     name: string;
     token: string;
-}
+} & Document;
 
 export class Bots extends Model<DbBot> {
     async tokenOf(name: string): Promise<string | null> {
