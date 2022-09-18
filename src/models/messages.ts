@@ -2,7 +2,7 @@ import { Message } from "node-telegram-bot-api";
 import { SavableModel } from "./common";
 
 export interface DbMessage {
-    messageId: number;
+    id: number;
     chatId: number;
     userId?: number;
     date: number;
@@ -17,7 +17,7 @@ export class Messages extends SavableModel<DbMessage, Message> {
         delete clone['from'];
         delete clone['date'];
         return {
-            messageId: message.message_id,
+            id: message.message_id,
             chatId: message.chat.id,
             userId: message.from?.id,
             date: message.date,

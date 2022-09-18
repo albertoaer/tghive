@@ -14,14 +14,14 @@ export interface DbUser {
 export type DbChat = {
     name?: string;
     alias?: string;
-    chatId: number;
+    id: number;
     via: TelegramBot.ChatType;
 } & (DbGroup | DbUser) & Document;
 
 export class Chats extends SavableModel<DbChat, Chat> {
     convert(item: Chat): DbChat {
         const base = {
-            chatId: item.id,
+            id: item.id,
             props: [],
             via: item.type,
             name: item.username,
