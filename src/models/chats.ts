@@ -16,6 +16,7 @@ export type DbChat = {
     alias?: string;
     id: number;
     via: TelegramBot.ChatType;
+    knownBots: string[]
 } & (DbGroup | DbUser) & Document;
 
 export class Chats extends SavableModel<DbChat, Chat> {
@@ -24,6 +25,7 @@ export class Chats extends SavableModel<DbChat, Chat> {
             id: item.id,
             via: item.type,
             name: item.username,
+            knownBots: []
         };
         if (item.type === 'private') {
             return {
@@ -34,5 +36,13 @@ export class Chats extends SavableModel<DbChat, Chat> {
         } else {
             return { ...base, groupName: item.title}
         }
+    }
+
+    async knowsBot(filter: Partial<Chat>, botToken: string): Promise<boolean> {
+        return (await this.find(filter))?.knownChats.includes(botToken) ?? false;
+    }
+
+    async includeBot(filter: Partial<Chat>, botToken: string): Promise<void> {
+        await this.collection.updateOne(filter, {$addToSet: {knownBots: botToken}});
     }
 }
