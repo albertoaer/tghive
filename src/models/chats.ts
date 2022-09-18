@@ -22,7 +22,6 @@ export class Chats extends SavableModel<DbChat, Chat> {
     convert(item: Chat): DbChat {
         const base = {
             id: item.id,
-            props: [],
             via: item.type,
             name: item.username,
         };
