@@ -37,3 +37,11 @@ export class Dice extends TgMessageWrapper<undefined> {
         super(undefined);
     }
 }
+
+export class Venue implements MessageData {
+    constructor(public coords: [number, number], public address: string, public name: string) {}
+
+    async send(bot: TelegramBot, chatId: number): Promise<TelegramBot.Message> {
+        return await bot.sendVenue(chatId, this.coords[0], this.coords[1], this.name, this.address);
+    }
+}
