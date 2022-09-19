@@ -31,7 +31,6 @@ export async function openHive(config: Config<HiveConfig, typeof defaultHiveConf
 export type HiveBotConfig = HiveConfig & Behave
 
 const defaultHiveBotConfig = {
-    keepChats: true,
     keepMessages: false,
     ...defaultHiveConfig
 }
