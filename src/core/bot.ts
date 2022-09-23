@@ -1,12 +1,15 @@
-import TelegramBot, {  Message } from "node-telegram-bot-api";
+import TelegramBot, { Message } from "node-telegram-bot-api";
+import { EventEmitter } from 'events';
 import { DbManager } from "../models";
 import { DbChat } from "../models/chats";
-import { onExit } from "../utils";
+import { DbMessage } from "../models/messages";
+import { escapeRegExp, onExit } from "../utils";
 import { HiveListenner } from "./hive";
 import { MessageData } from "./messaging";
 
 export interface Behave {
     keepMessages: boolean;
+    commands: [string, string][];
 }
 
 export function getTgBot(token: string, behave: Behave, db: DbManager): TelegramBot {
@@ -26,7 +29,18 @@ export function getTgBot(token: string, behave: Behave, db: DbManager): Telegram
     return tg;
 }
 
-export class HiveBot {
+export declare interface HiveBot {
+    on(event: 'message', listener: (input: DbMessage) => void): this;
+    on(event: 'command', listener: (cmd: string, input: DbMessage) => void): this;
+}
+
+export class CommandsError extends Error {
+    constructor() {
+        super('Error setting the commands');
+    }
+}
+
+export class HiveBot extends EventEmitter {
     public readonly tgBot: TelegramBot = getTgBot(this.token, this.behave, this.db);
 
     constructor(
@@ -35,7 +49,20 @@ export class HiveBot {
         protected hive: HiveListenner,
         protected db: DbManager
     ) {
-        
+        super({});
+        this.tgBot.addListener('message', msg => this.emit('message', db.messages.convert(msg)));
+        const commandMatch = new RegExp('/(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')( (.*))?');
+        const commandNameMatch = new RegExp('(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')');
+
+        this.tgBot.setMyCommands(behave.commands.map(c => {
+            return { command: c[0], description: c[1] }
+        }), {scope: { type: "default" }}).then(success => {
+            if (!success) throw new CommandsError();
+            if (this.behave.commands)
+                this.tgBot.onText(commandMatch, (msg, match) =>
+                    this.emit('command', commandNameMatch.exec(match?.[0] as string)?.[0] as string, db.messages.convert(msg))
+                );
+        });
     }
 
     async chat(id: number | string): Promise<DbChat | null> {
