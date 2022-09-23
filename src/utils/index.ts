@@ -13,3 +13,7 @@ export function onExit(callback: () => Promise<void>) {
         })
     );
 }
+
+export function escapeRegExp(input: string) {
+    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  }
