@@ -10,6 +10,7 @@ import { MessageData } from "./messaging";
 export interface Behave {
     keepMessages: boolean;
     commands: [string, string][];
+    schemas: [string, RegExp | string][];
 }
 
 export function getTgBot(token: string, behave: Behave, db: DbManager): TelegramBot {
@@ -30,8 +31,10 @@ export function getTgBot(token: string, behave: Behave, db: DbManager): Telegram
 }
 
 export declare interface HiveBot {
+
     on(event: 'message', listener: (input: DbMessage) => void): this;
     on(event: 'command', listener: (cmd: string, input: DbMessage) => void): this;
+    on(event: 'schema', listener: (schema: string, input: DbMessage) => void): this;
 }
 
 export class CommandsError extends Error {
@@ -50,18 +53,27 @@ export class HiveBot extends EventEmitter {
         protected db: DbManager
     ) {
         super({});
+        //Messages
         this.tgBot.addListener('message', msg => this.emit('message', db.messages.convert(msg)));
-        const commandMatch = new RegExp('/(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')( (.*))?');
-        const commandNameMatch = new RegExp('(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')');
-
+        
+        //Commands
         this.tgBot.setMyCommands(behave.commands.map(c => {
             return { command: c[0], description: c[1] }
         }), {scope: { type: "default" }}).then(success => {
             if (!success) throw new CommandsError();
+            const commandMatch = new RegExp('/(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')( (.*))?');
+            const commandNameMatch = new RegExp('(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')');
             if (this.behave.commands)
                 this.tgBot.onText(commandMatch, (msg, match) =>
                     this.emit('command', commandNameMatch.exec(match?.[0] as string)?.[0] as string, db.messages.convert(msg))
                 );
+        });
+
+        //Schemas
+        behave.schemas.map(s => [s[0], typeof s[1] === 'string' ? new RegExp(s[1]) : s[1]] as [string, RegExp]).forEach(s => {
+            this.tgBot.onText(s[1], (msg, _) => {
+                this.emit('schema', s[0], db.messages.convert(msg));
+            });
         });
     }
 
