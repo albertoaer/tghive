@@ -32,14 +32,33 @@ export function getTgBot(token: string, behave: Behave, db: DbManager): Telegram
 
 export declare interface HiveBot {
 
+    /**
+     * Matchs any message
+     * @param listener A handler for the message
+     */
     on(event: 'message', listener: (input: DbMessage) => void): this;
+    /**
+     * Matchs a previously defined command
+     * @param listener A handler for the message
+     */
     on(event: 'command', listener: (cmd: string, input: DbMessage) => void): this;
-    on(event: 'schema', listener: (schema: string, input: DbMessage) => void): this;
+    /**
+     * Matchs a previously defined schema
+     * @param event The schema name to match
+     * @param listener A handler for the message
+     */
+    on(event: string, listener: (input: DbMessage) => void): this;
 }
 
 export class CommandsError extends Error {
     constructor() {
         super('Error setting the commands');
+    }
+}
+
+export class SchemaError extends Error {
+    constructor(type: 'name') {
+        super(`Invalid schema ${type}`);
     }
 }
 
@@ -61,7 +80,7 @@ export class HiveBot extends EventEmitter {
             return { command: c[0], description: c[1] }
         }), {scope: { type: "default" }}).then(success => {
             if (!success) throw new CommandsError();
-            const commandMatch = new RegExp('/(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')( (.*))?');
+            const commandMatch = new RegExp('^/(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')( (.*))?$');
             const commandNameMatch = new RegExp('(' + this.behave.commands.map(b => escapeRegExp(b[0])).join('|') + ')');
             if (this.behave.commands)
                 this.tgBot.onText(commandMatch, (msg, match) =>
@@ -71,8 +90,10 @@ export class HiveBot extends EventEmitter {
 
         //Schemas
         behave.schemas.map(s => [s[0], typeof s[1] === 'string' ? new RegExp(s[1]) : s[1]] as [string, RegExp]).forEach(s => {
+            if (s[0] === 'command' || s[0] === 'message')
+                throw new SchemaError('name');
             this.tgBot.onText(s[1], (msg, _) => {
-                this.emit('schema', s[0], db.messages.convert(msg));
+                this.emit(s[0], db.messages.convert(msg));
             });
         });
     }
